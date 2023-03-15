@@ -26,12 +26,14 @@ Ny = 600
 
 R = 0.37
 s = 0.6
-m_0 = 3.5
+m_0 = 2.5
 mu = 1
 V = -10e2
 g = -(2*xi**2)/m_0
 sigma = np.sqrt(2*xi*c_s)
 lam = -g*m_0 
+
+print('g = {:.2f} sigma ={:.2f} lam = {:.2f}'.format(g,sigma,lam))
 
 #Define grid 
 dx = (2*Lx)/(Nx-1)
@@ -42,6 +44,8 @@ X,Y = np.meshgrid(x,y)
 
 def norm(u,v):
     return np.sqrt(u**2+v**2)
+
+# Function plotting 
 
 def im(m,d):   
     plt.figure(figsize=(10,10))
@@ -60,6 +64,8 @@ def im(m,d):
     plt.show()
     plt.close()
     
+# Function plotting velocitites, plotted every l grid points (for visibility), in a box of side d and using desnity m to create transparency
+
 def quiv(ax,ay,l,d,m):
     x = X[1:-1,1:-1][::l,::l]
     y = Y[1:-1,1:-1][::l,::l]
@@ -84,14 +90,20 @@ def quiv(ax,ay,l,d,m):
     plt.savefig('figs/v_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.png')
     plt.show()
     plt.close()
-             
+ 
+
+# Uncomment here to upload data about density m and velocities vx and vy            
 
 m = np.genfromtxt('data/m_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.txt')
-#vx = np.genfromtxt('data/vx_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.txt')
-#vy = np.genfromtxt('data/vy_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.txt')
+vx = np.genfromtxt('data/vx_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.txt')
+vy = np.genfromtxt('data/vy_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.txt')
 
-im(m,12)
-#quiv(vx,vy,2,2,m)
+# Uncomment here to have velocity plots
+
+#im(m,12)
+quiv(vx,vy,2,2,m)
+
+# Uncomment here to plot horizontal and vertical cuts
 
 #plt.plot(x,m[Ny//2,:],label="perpendicular")
 #plt.show()
