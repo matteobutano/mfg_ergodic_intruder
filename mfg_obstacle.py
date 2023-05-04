@@ -93,7 +93,7 @@ v = vel(m,p,q)
 vx,vy = v[0],v[1] 
 
 np.savetxt(r'data/m_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',m)
+np.savetxt(r'data/p_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',p)
+np.savetxt(r'data/q_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',q)
 np.savetxt(r'data/vx_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',vx)
 np.savetxt(r'data/vy_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',vy)
-
-
