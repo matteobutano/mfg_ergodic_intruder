@@ -87,7 +87,7 @@ def quiv(ax,ay,l,d,m):
     plt.gca().add_artist(a)
     plt.gca().add_artist(c)
     plt.quiver(x,y,ax,ay+s,angles='xy', scale_units='xy', scale=1, pivot = 'mid', alpha = mtr)
-    plt.savefig('figs/v_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.png')
+    #plt.savefig('figs/v_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.png')
     plt.show()
     plt.close()
  
