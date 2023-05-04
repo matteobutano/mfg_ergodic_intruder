@@ -1,20 +1,19 @@
 #!/usr/bin/python
 
 import numpy as np
-import sys
 import time
 
 # Main Parameters
-xi = 0.3
+xi = 0.2
 c_s = 0.2
 Lx = 6
-Ly = 12
-Nx = 300
-Ny = 600
+Ly = 6
+Nx = 150
+Ny = 150
 
 # Constants
 R = 0.37
-s = 0.6
+s = 0.3
 m_0 = 2.5
 mu = 1
 V = -10e2

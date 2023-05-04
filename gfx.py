@@ -17,23 +17,23 @@ for i in range(3):
 cmap = np.vstack((usual,saturate))
 cmap = mpl.colors.ListedColormap(cmap, name='myColorMap', N=cmap.shape[0])
 
-xi= 0.3
+xi = 0.2
 c_s = 0.2
 Lx = 6
-Ly = 12
-Nx = 300
-Ny = 600
+Ly = 6
+Nx = 150
+Ny = 150
 
+# Constants
 R = 0.37
-s = 0.6
+s = 0.3
 m_0 = 2.5
 mu = 1
 V = -10e2
 g = -(2*xi**2)/m_0
 sigma = np.sqrt(2*xi*c_s)
-lam = -g*m_0 
 
-print('g = {:.2f} sigma ={:.2f} lam = {:.2f}'.format(g,sigma,lam))
+print('g = {:.2f} sigma = {:.2f}'.format(g,sigma))
 
 #Define grid 
 dx = (2*Lx)/(Nx-1)
@@ -100,8 +100,8 @@ vy = np.genfromtxt('data/vy_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+st
 
 # Uncomment here to have velocity plots
 
-#im(m,12)
-quiv(vx,vy,2,2,m)
+im(m,6)
+#quiv(vx,vy,2,2,m)
 
 # Uncomment here to plot horizontal and vertical cuts
 
