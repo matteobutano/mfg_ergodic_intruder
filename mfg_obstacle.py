@@ -6,8 +6,8 @@ import time
 # Main Parameters
 xi = 0.2
 c_s = 0.2
-Lx = 6
-Ly = 6
+Lx = 2
+Ly = 2
 Nx = 150
 Ny = 150
 

@@ -19,8 +19,8 @@ cmap = mpl.colors.ListedColormap(cmap, name='myColorMap', N=cmap.shape[0])
 
 xi = 0.2
 c_s = 0.2
-Lx = 6
-Ly = 6
+Lx = 2
+Ly = 2
 Nx = 150
 Ny = 150
 
@@ -100,7 +100,7 @@ vy = np.genfromtxt('data/vy_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+st
 
 # Uncomment here to have velocity plots
 
-im(m,6)
+im(m,Lx)
 #quiv(vx,vy,2,2,m)
 
 # Uncomment here to plot horizontal and vertical cuts
