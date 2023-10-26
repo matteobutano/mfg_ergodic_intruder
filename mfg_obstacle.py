@@ -2,21 +2,29 @@
 
 import numpy as np
 import time
+import json
+
+'save' == 0 
+
+# Read parameters
+
+with open('config.json') as f:
+    var = json.loads(f.read())
 
 # Main Parameters
-xi = 0.2
-c_s = 0.2
-Lx = 2
-Ly = 2
-Nx = 150
-Ny = 150
+xi = var['mfg_params']['xi']
+c_s = var['mfg_params']['c_s']
+Lx = var['room']['lx']
+Ly = var['room']['ly']
+Nx = var['room']['nx']
+Ny = var['room']['ny']
 
 # Constants
-R = 0.37
-s = 0.3
-m_0 = 2.5
-mu = 1
-V = -10e2
+R = var['room']['R']
+s = var['room']['s']
+m_0 = var['room']['m_0']
+mu = var['mfg_params']['mu']
+V = var['mfg_params']['V']
 g = -(2*c_s**2)/m_0
 sigma = np.sqrt(2*xi*c_s)
 lam = -g*m_0 
@@ -92,8 +100,9 @@ m,p,q = sim[0],sim[1],sim[2]
 v = vel(m,p,q)
 vx,vy = v[0],v[1] 
 
-np.savetxt(r'data/m_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',m)
-np.savetxt(r'data/p_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',p)
-np.savetxt(r'data/q_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',q)
-np.savetxt(r'data/vx_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',vx)
-np.savetxt(r'data/vy_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',vy)
+if 'save' == 1:
+    np.savetxt(r'data/m_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',m)
+    np.savetxt(r'data/p_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',p)
+    np.savetxt(r'data/q_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',q)
+    np.savetxt(r'data/vx_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',vx)
+    np.savetxt(r'data/vy_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'.txt',vy)
