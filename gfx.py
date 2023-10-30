@@ -1,12 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import json
+
+#  Choose options
+
+save = 0
+mode = "density"
 
 plt.rcParams.update({
   "text.usetex": True,
   "font.family": "Computer Modern Serif"
 })
 
+with open('config.json') as f:
+    var = json.loads(f.read())
 
 usual = mpl.cm.hot_r(np.arange(256))
 saturate = np.ones((int(256/100),4))
@@ -17,23 +25,23 @@ for i in range(3):
 cmap = np.vstack((usual,saturate))
 cmap = mpl.colors.ListedColormap(cmap, name='myColorMap', N=cmap.shape[0])
 
-xi = 0.2
-c_s = 0.2
-Lx = 2
-Ly = 2
-Nx = 150
-Ny = 150
+#Main Parameters
+xi = var['mfg_params']['xi']
+c_s = var['mfg_params']['c_s']
+Lx = var['room']['lx']
+Ly = var['room']['ly']
+Nx = var['room']['nx']
+Ny = var['room']['ny']
 
 # Constants
-R = 0.37
-s = 0.3
-m_0 = 2.5
-mu = 1
-V = -10e2
-g = -(2*xi**2)/m_0
+R = var['room']['R']
+s = var['room']['s']
+m_0 = var['room']['m_0']
+mu = var['mfg_params']['mu']
+V = var['mfg_params']['V']
+g = -(2*c_s**2)/m_0
 sigma = np.sqrt(2*xi*c_s)
-
-print('g = {:.2f} sigma = {:.2f}'.format(g,sigma))
+lam = -g*m_0 
 
 #Define grid 
 dx = (2*Lx)/(Nx-1)
@@ -60,7 +68,8 @@ def im(m,d):
     plt.gca().add_artist(c)
     plt.imshow(m,extent=[-Lx,Lx,-Ly,Ly],cmap = cmap)
     plt.colorbar()
-    plt.savefig('figs/m_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.png')
+    if save == 1:
+        plt.savefig('figs/m_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.png')
     plt.show()
     plt.close()
     
@@ -87,12 +96,12 @@ def quiv(ax,ay,l,d,m):
     plt.gca().add_artist(a)
     plt.gca().add_artist(c)
     plt.quiver(x,y,ax,ay+s,angles='xy', scale_units='xy', scale=1, pivot = 'mid', alpha = mtr)
-    #plt.savefig('figs/v_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.png')
+    if save == 1:
+        plt.savefig('figs/v_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.png')
     plt.show()
     plt.close()
  
-
-# Uncomment here to upload data about density m and velocities vx and vy            
+# Upload data about density m and velocities vx and vy            
 
 m = np.genfromtxt('data/m_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.txt')
 vx = np.genfromtxt('data/vx_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+str(Ly)+'_xi='+str(xi)+'_c_s='+str(c_s)+'.txt')
@@ -100,13 +109,22 @@ vy = np.genfromtxt('data/vy_Nx='+str(Nx)+'_Ny='+str(Ny)+'_Lx='+str(Lx)+'_Ly='+st
 
 # Uncomment here to have velocity plots
 
-im(m,Lx)
-#quiv(vx,vy,2,2,m)
+if mode == "density":
+    
+    im(m,Lx)
+    
+elif mode == "velocity":
+    
+    quiv(vx,vy,2,2,m)
 
-# Uncomment here to plot horizontal and vertical cuts
+elif mode == "perpendicular":
 
-#plt.plot(x,m[Ny//2,:],label="perpendicular")
-#plt.show()
-#plt.plot(y,m[:,Nx//2],label ="parallel")
-#plt.show()
-#plt.legend()
+    plt.plot(x,m[Ny//2,:],label="perpendicular")
+    plt.legend()
+    plt.show()
+    
+elif mode =="parallel":
+    plt.plot(y,m[:,Nx//2],label ="parallel")
+    plt.legend()
+    plt.show()
+    
