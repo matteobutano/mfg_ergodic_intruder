@@ -1,10 +1,11 @@
+#!/usr/bin/python
+
 import numpy as np
-import matplotlib.pyplot as plt
 import time 
-
 import json
+# import matplotlib.pyplot as plt
 
-'save' == 0 
+save = 1
 
 # Read parameters
 
@@ -14,26 +15,23 @@ with open('config.json') as f:
 # Main Parameters
 xi = var['mfg_params']['xi']
 c_s = var['mfg_params']['c_s']
-Lx = var['room']['lx']
-Ly = var['room']['ly']
-Nx = var['room']['nx']
-Ny = var['room']['ny']
 
 # Constants
 R = var['room']['R']
-s = var['room']['s']
+s = -var['room']['s']
 m_0 = var['room']['m_0']
 mu = var['mfg_params']['mu']
 V = var['mfg_params']['V']
 gam = var['mfg_params']['gam']
+
 g = -(2*c_s**2)/m_0
 sigma = np.sqrt(2*xi*c_s)
 
 # Create space
-lx = 5
-ly = 8
+lx = var['room']['lx']
+ly = var['room']['ly']
 l = np.min([np.abs(0.1/s),0.1/np.sqrt(gam)])
-dx = 0.3*l
+dx = 0.2*l
 dy = dx
 nx = int(2*lx/dx + 1)
 ny = int(2*ly/dy + 1)
@@ -55,6 +53,8 @@ V[np.sqrt(X**2 + Y**2) < R] = -1000
 
 def L2_error(p, pn):
     return np.sqrt(np.sum((p - pn)**2)/np.sum(pn**2))     
+
+
 
 def jacobi_u(u,m):
 
@@ -97,6 +97,7 @@ def jacobi_u(u,m):
     return u
 
 def jacobi_m(m,u):
+    
     m[0,:] = m_0
     m[:,0] = m_0
     m[-1,:] = m_0
@@ -126,7 +127,7 @@ def jacobi_m(m,u):
         mn_mask_in[mask_outer_rim] = mn[mask_outer_rim]/np.exp(-u[mask_outer_rim]/(mu*sigma**2)) 
 
         A_gamma = 2*mu*sigma**4/(dx*dy) - V[1:-1,1:-1]
-        S_gamma = 0.5*mu*sigma**4*(mn_mask_in[2:,1:-1] + mn_mask_in[:-2,1:-1] + mn_mask_in[1:-1,2:] + mn_mask_in[1:-1,:-2])/(dx*dy) 
+        S_gamma = 0.5*mu*sigma**4*(mn_mask_in[2:,1:-1] + mn_mask_in[:-2,1:-1] + mn_mask_in[1:-1,2:] + mn_mask_in[1:-1,:-2])/(dx*dy)
  
         m[mask_in] = S_gamma[mask_in[1:-1,1:-1]]/A_gamma[mask_in[1:-1,1:-1]]
                 
@@ -148,7 +149,16 @@ def jacobi_m(m,u):
         
     return m
 
-u_sol = np.zeros((ny,nx)) + 0.5
+def vel(m,p,q):
+    phi_grad_x = (p[1:-1,2:]-p[1:-1,:-2])/(2*dx)
+    phi_grad_y = (p[2:,1:-1]-p[:-2,1:-1])/(2*dy)
+    gamma_grad_x = (q[1:-1,2:]-q[1:-1,:-2])/(2*dx)
+    gamma_grad_y = (q[2:,1:-1]-q[:-2,1:-1])/(2*dy)
+    v_x = sigma**2*(q[1:-1,1:-1]*phi_grad_x-p[1:-1,1:-1]*gamma_grad_x)/(2*m[1:-1,1:-1])
+    v_y = sigma**2*(q[1:-1,1:-1]*phi_grad_y-p[1:-1,1:-1]*gamma_grad_y)/(2*m[1:-1,1:-1])-s
+    return np.array([v_x,v_y])
+
+u_sol = np.zeros((ny,nx)) - g*m_0/gam
 m_sol = np.zeros((ny,nx)) + m_0
 
 l2norm = 1
@@ -157,7 +167,7 @@ alpha = 0.5
 
 print('Computation begins')
 
-while l2norm > 10e-6:
+while l2norm > 10e-8:
     
     m_old = m_sol.copy()
     
@@ -173,10 +183,21 @@ while l2norm > 10e-6:
     
     print(f'Error = {l2norm:.3e} Time = {(toc-tic)//3600:.0f}h{((toc-tic)//60)%60:.0f}m{(toc-tic)%60:.0f}s')
     
-m_sol[mask_in] = m_sol[mask_in]*u_sol[mask_in]
-plt.pcolor(X,Y,m_sol,cmap = 'hot_r')
-plt.colorbar()
-plt.xlim(-2,2)
-plt.ylim(-2,2)
-plt.show()
+print('Computation ends')
+
+# p = u_sol.copy()
+# p[mask_out] = np.exp(-p[mask_out]/(mu*sigma**2))
+# q = m_sol.copy()
+# q[mask_out] = q[mask_out]/p[mask_out]
+m = m_sol
+m[mask_in] = m[mask_in]*u_sol[mask_in]
+
+# v = vel(m_sol,p,q)
+# vx,vy = v[0],v[1] 
+    
+if save == 1:
+    np.savetxt(r'data/m_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt',m)
+    # np.savetxt(r'data/vx_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt',vx)
+    # np.savetxt(r'data/vy_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt',vy)
+
 
