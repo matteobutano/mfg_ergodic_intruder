@@ -15,7 +15,7 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 
 
-with open('config.json') as f:
+with open('../config.json') as f:
     var = json.loads(f.read())
 
 usual = mpl.cm.hot_r(np.arange(256))
@@ -46,7 +46,7 @@ sigma = np.sqrt(2*xi*c_s)
 lx = var['room']['lx']
 ly = var['room']['ly']
 l = np.min([np.abs(0.1/s),0.1/np.sqrt(gam)])
-dx = 0.3*l
+dx = 0.1*l
 dy = dx
 nx = int(2*lx/dx + 1)
 ny = int(2*ly/dy + 1)
@@ -64,16 +64,19 @@ def im(m,d):
     plt.figure(figsize=(10,10))
     plt.ylim((-d,d))
     plt.xlim((-d,d))
-    plt.title(fr'$s$={s:.2f} $c_s$={c_s:.2f} $R$={R:.2f} $\xi$={xi:.2f} $\gamma$={gam:.2f}',size= 20)
-    plt.xticks([-d,0,d],[-d,0,d],size = 20)
-    plt.yticks([-d,0,d],[-d,0,d],size = 20)
+    # plt.title(fr'$s$={s:.2f} $c_s$={c_s:.2f} $R$={R:.2f} $\xi$={xi:.2f} $\gamma$={gam:.2f}',size= 20)
+    # plt.xticks([-d,0,d],[-d,0,d],size = 20)
+    # plt.yticks([-d,0,d],[-d,0,d],size = 20)
+    plt.axis('off')
     a = plt.arrow(0,-0.2,0,0.25,width = 0.1,head_width = .3,head_length = 0.2,color = 'black',zorder= 10)
     c = plt.Circle((0, 0),radius = R)
+    scale = plt.arrow(0,-1.2,1,0,width = 0.1,head_width = 0,head_length = 0,color = 'green')
     plt.gca().add_artist(a)
     plt.gca().add_artist(c)
-    plt.imshow(m,extent=[-lx,lx,-ly,ly],cmap = cmap)
+    plt.gca().add_artist(scale)
+    plt.imshow(np.flip(m,axis = 0),extent=[-lx,lx,-ly,ly],cmap = cmap)
     plt.clim(0,6)
-    plt.colorbar()
+    # plt.colorbar()
     if save == 1:
         plt.savefig('figs/m_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.png')
     plt.show()
@@ -90,10 +93,10 @@ def quiv(ax,ay,l,d,m):
     ax = ax[::l,::l]
     ay = ay[::l,::l]
     plt.figure(figsize=(10,10))
-    plt.axis('equal')
+    plt.axis('off')
     plt.ylim((-d,d))
     plt.xlim((-d,d))
-    plt.title(fr'$s$={s:.2f} $c_s$={c_s:.2f} $R$={R:.2f} $\xi$={xi:.2f}',size= 20)
+    # plt.title(fr'$s$={s:.2f} $c_s$={c_s:.2f} $R$={R:.2f} $\xi$={xi:.2f}',size= 20)
     plt.xticks([-d,0,d],[-d,0,d],size = 50)
     plt.yticks([-d,0,d],[-d,0,d],size = 50)
     plt.tick_params(left = False, right = False , labelleft = False ,labelbottom = False, bottom = False)
@@ -101,7 +104,7 @@ def quiv(ax,ay,l,d,m):
     c = plt.Circle((0, 0),radius = R)
     plt.gca().add_artist(a)
     plt.gca().add_artist(c)
-    plt.quiver(x,y,ax,ay+s,angles='xy', scale_units='xy', scale=1, pivot = 'mid', alpha = mtr)
+    plt.quiver(x,y,ax,ay + s,angles='xy', scale_units='xy', scale=1, pivot = 'mid', alpha = mtr)
     if save == 1:
         plt.savefig('figs/v_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.png')
     plt.show()
@@ -109,9 +112,9 @@ def quiv(ax,ay,l,d,m):
  
 # Upload data about density m and velocities vx and vy            
 
-m = np.genfromtxt('data/m_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt')
-# vx = np.genfromtxt('data/vx_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt')
-# vy = np.genfromtxt('data/vx_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt')
+m = np.genfromtxt('../data/m_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt')
+vx = np.genfromtxt('../data/vx_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt')
+vy = np.genfromtxt('../data/vy_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt')
 
 # Uncomment here to have velocity plots
 
@@ -121,7 +124,7 @@ if mode == "density":
     
 elif mode == "velocity":
     
-    quiv(vx,vy,6,2,m)
+    quiv(vx,vy,6,1.5,m)
 
 elif mode == "perpendicular":
 

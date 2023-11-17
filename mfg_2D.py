@@ -3,14 +3,15 @@
 import numpy as np
 import time 
 import json
-# import matplotlib.pyplot as plt
-
-save = 1
 
 # Read parameters
 
-with open('config.json') as f:
+with open('../config.json') as f:
     var = json.loads(f.read())
+    
+# Saving option
+
+save = var['global']['save']
 
 # Main Parameters
 xi = var['mfg_params']['xi']
@@ -18,7 +19,7 @@ c_s = var['mfg_params']['c_s']
 
 # Constants
 R = var['room']['R']
-s = -var['room']['s']
+s = var['room']['s']
 m_0 = var['room']['m_0']
 mu = var['mfg_params']['mu']
 V = var['mfg_params']['V']
@@ -54,8 +55,6 @@ V[np.sqrt(X**2 + Y**2) < R] = -1000
 def L2_error(p, pn):
     return np.sqrt(np.sum((p - pn)**2)/np.sum(pn**2))     
 
-
-
 def jacobi_u(u,m):
 
     u[0,:] = -g*m_0/gam
@@ -74,7 +73,7 @@ def jacobi_u(u,m):
         un_mask_in[mask_outer_rim] = np.exp(-un_mask_in[mask_outer_rim]/(mu*sigma**2))
 
         A_phi = 2*mu*sigma**4/(dx*dy) - V[1:-1,1:-1]
-        S_phi = 0.5*mu*sigma**4*(un_mask_in[2:,1:-1] + un_mask_in[:-2,1:-1] + un_mask_in[1:-1,2:] + un_mask_in[1:-1,:-2])/(dx*dy) 
+        S_phi = 0.5*mu*sigma**4*(un_mask_in[2:,1:-1] + un_mask_in[:-2,1:-1] + un_mask_in[1:-1,2:] + un_mask_in[1:-1,:-2])/(dx*dy)  - mu*sigma**2*s*(un_mask_in[2:,1:-1] - un_mask_in[:-2,1:-1])/(2*dy)
  
         u[mask_in] = S_phi[mask_in[1:-1,1:-1]]/A_phi[mask_in[1:-1,1:-1]]
     
@@ -92,7 +91,7 @@ def jacobi_u(u,m):
      
         l2norm = L2_error(u,un)
         
-        # print(l2norm)
+        print(l2norm)
         
     return u
 
@@ -127,7 +126,7 @@ def jacobi_m(m,u):
         mn_mask_in[mask_outer_rim] = mn[mask_outer_rim]/np.exp(-u[mask_outer_rim]/(mu*sigma**2)) 
 
         A_gamma = 2*mu*sigma**4/(dx*dy) - V[1:-1,1:-1]
-        S_gamma = 0.5*mu*sigma**4*(mn_mask_in[2:,1:-1] + mn_mask_in[:-2,1:-1] + mn_mask_in[1:-1,2:] + mn_mask_in[1:-1,:-2])/(dx*dy)
+        S_gamma = 0.5*mu*sigma**4*(mn_mask_in[2:,1:-1] + mn_mask_in[:-2,1:-1] + mn_mask_in[1:-1,2:] + mn_mask_in[1:-1,:-2])/(dx*dy) + mu*sigma**2*s*(mn_mask_in[2:,1:-1] - mn_mask_in[:-2,1:-1])/(2*dy)
  
         m[mask_in] = S_gamma[mask_in[1:-1,1:-1]]/A_gamma[mask_in[1:-1,1:-1]]
                 
@@ -145,17 +144,20 @@ def jacobi_m(m,u):
      
         l2norm = L2_error(m,mn)
         
-        # print(l2norm)
+        print(l2norm)
         
     return m
 
 def vel(m,p,q):
     phi_grad_x = (p[1:-1,2:]-p[1:-1,:-2])/(2*dx)
     phi_grad_y = (p[2:,1:-1]-p[:-2,1:-1])/(2*dy)
+    
     gamma_grad_x = (q[1:-1,2:]-q[1:-1,:-2])/(2*dx)
     gamma_grad_y = (q[2:,1:-1]-q[:-2,1:-1])/(2*dy)
+    
     v_x = sigma**2*(q[1:-1,1:-1]*phi_grad_x-p[1:-1,1:-1]*gamma_grad_x)/(2*m[1:-1,1:-1])
-    v_y = sigma**2*(q[1:-1,1:-1]*phi_grad_y-p[1:-1,1:-1]*gamma_grad_y)/(2*m[1:-1,1:-1])-s
+    v_y = sigma**2*(q[1:-1,1:-1]*phi_grad_y-p[1:-1,1:-1]*gamma_grad_y)/(2*m[1:-1,1:-1]) - s 
+
     return np.array([v_x,v_y])
 
 u_sol = np.zeros((ny,nx)) - g*m_0/gam
@@ -172,7 +174,6 @@ while l2norm > 10e-8:
     m_old = m_sol.copy()
     
     u_sol = jacobi_u(u_sol,m_sol)
-
     m_sol = jacobi_m(m_sol,u_sol)
     
     m_sol = alpha*m_sol + (1-alpha)*m_old
@@ -185,19 +186,19 @@ while l2norm > 10e-8:
     
 print('Computation ends')
 
-# p = u_sol.copy()
-# p[mask_out] = np.exp(-p[mask_out]/(mu*sigma**2))
-# q = m_sol.copy()
-# q[mask_out] = q[mask_out]/p[mask_out]
+p = u_sol.copy()
+p[mask_out] = np.exp(-p[mask_out]/(mu*sigma**2))
+q = m_sol.copy()
+q[mask_out] = q[mask_out]/p[mask_out]
 m = m_sol
 m[mask_in] = m[mask_in]*u_sol[mask_in]
 
-# v = vel(m_sol,p,q)
-# vx,vy = v[0],v[1] 
+v = vel(m_sol,p,q)
+vx,vy = v[0],v[1] 
     
-if save == 1:
+if save:
     np.savetxt(r'data/m_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt',m)
-    # np.savetxt(r'data/vx_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt',vx)
-    # np.savetxt(r'data/vy_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt',vy)
+    np.savetxt(r'data/vx_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt',vx)
+    np.savetxt(r'data/vy_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.txt',vy)
 
 
