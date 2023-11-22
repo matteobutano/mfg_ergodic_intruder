@@ -15,11 +15,11 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 
 
-with open('../config.json') as f:
+with open('../configs/bottom_right_small_gamma.json') as f:
     var = json.loads(f.read())
 
 usual = mpl.cm.hot_r(np.arange(256))
-saturate = np.ones((int(256/3),4))
+saturate = np.ones((int(256/256),4))
 
 for i in range(3):
     saturate[:,i] = np.linspace(usual[-1,i],0,saturate.shape[0])
@@ -64,18 +64,18 @@ def im(m,d):
     plt.figure(figsize=(10,10))
     plt.ylim((-d,d))
     plt.xlim((-d,d))
-    # plt.title(fr'$s$={s:.2f} $c_s$={c_s:.2f} $R$={R:.2f} $\xi$={xi:.2f} $\gamma$={gam:.2f}',size= 20)
-    # plt.xticks([-d,0,d],[-d,0,d],size = 20)
-    # plt.yticks([-d,0,d],[-d,0,d],size = 20)
-    plt.axis('off')
-    a = plt.arrow(0,-0.2,0,0.25,width = 0.1,head_width = .3,head_length = 0.2,color = 'black',zorder= 10)
+    plt.title(fr'$s$={s:.2f} $c_s$={c_s:.2f} $R$={R:.2f} $\xi$={xi:.2f} $\gamma$={gam:.2f}',size= 20)
+    plt.xticks([-d,0,d],[-d,0,d],size = 20)
+    plt.yticks([-d,0,d],[-d,0,d],size = 20)
+    # plt.axis('off')
+    # a = plt.arrow(0,-0.2,0,0.25,width = 0.1,head_width = .3,head_length = 0.2,color = 'black',zorder= 10)
     c = plt.Circle((0, 0),radius = R)
-    scale = plt.arrow(0,-1.2,1,0,width = 0.1,head_width = 0,head_length = 0,color = 'green')
-    plt.gca().add_artist(a)
+    # scale = plt.arrow(0,-1.2,1,0,width = 0.1,head_width = 0,head_length = 0,color = 'green')
+    # plt.gca().add_artist(a)
     plt.gca().add_artist(c)
-    plt.gca().add_artist(scale)
+    # plt.gca().add_artist(scale)
     plt.imshow(np.flip(m,axis = 0),extent=[-lx,lx,-ly,ly],cmap = cmap)
-    plt.clim(0,6)
+    # plt.clim(0,1.5)
     # plt.colorbar()
     if save == 1:
         plt.savefig('figs/m_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi='+str(round(xi,2))+'_c_s='+str(round(c_s,2))+'_gamma='+str(round(gam,2))+'.png')
@@ -120,7 +120,7 @@ vy = np.genfromtxt('../data/vy_m_0='+str(m_0)+'_lx='+str(lx)+'_ly='+str(ly)+'_xi
 
 if mode == "density":
     
-    im(m,1.5)
+    im(m,4)
     
 elif mode == "velocity":
     

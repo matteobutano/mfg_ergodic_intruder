@@ -3,10 +3,15 @@
 import numpy as np
 import time 
 import json
+import sys
 
 # Read parameters
 
-with open('../config.json') as f:
+config = sys.argv[1]
+
+# config = 'top_left_large_gamma'
+
+with open(r'configs/'+ config +'.json') as f:
     var = json.loads(f.read())
     
 # Saving option
@@ -66,9 +71,9 @@ def jacobi_u(u,m):
     l2norm = 1
     
     while l2norm > l2_target:
-        
+
         un = u.copy()
-    
+      
         un_mask_in = u.copy()
         un_mask_in[mask_outer_rim] = np.exp(-un_mask_in[mask_outer_rim]/(mu*sigma**2))
 
@@ -91,7 +96,7 @@ def jacobi_u(u,m):
      
         l2norm = L2_error(u,un)
         
-        print(l2norm)
+        # print(l2norm)
         
     return u
 
@@ -144,7 +149,7 @@ def jacobi_m(m,u):
      
         l2norm = L2_error(m,mn)
         
-        print(l2norm)
+        # print(l2norm)
         
     return m
 
