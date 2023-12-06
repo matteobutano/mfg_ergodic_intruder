@@ -334,6 +334,8 @@ class mfg:
         if l =='auto':
             lx = int(round((self.nx - 2)/40))
             ly = int(round((self.ny - 2)/40))
+            l = np.min([lx,ly])
+            print(l)
         
         plt.xlim((-d,d))
         plt.ylim((-d,d))
@@ -352,14 +354,14 @@ class mfg:
         plt.gca().add_artist(a)
         plt.gca().add_artist(c)
         
-        x = self.X[1:-1,1:-1][::ly,::lx]
-        y = self.Y[1:-1,1:-1][::ly,::lx]
+        x = self.X[1:-1,1:-1][::l,::l]
+        y = self.Y[1:-1,1:-1][::l,::l]
         
         mtr = self.m[1:-1,1:-1]
-        mtr = mtr[::ly,::lx]
+        mtr = mtr[::l,::l]
         mtr = (mtr-np.min(mtr))/np.max(mtr)
-        ax = self.vx[::ly,::lx]
-        ay = self.vy[::ly,::lx]
+        ax = self.vx[::l,::l]
+        ay = self.vy[::l,::l]
         
         plt.quiver(x,y,ax,ay + self.s,angles='xy', scale_units='xy', scale=1, pivot = 'mid', alpha = mtr)
        
