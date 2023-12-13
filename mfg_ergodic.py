@@ -151,7 +151,7 @@ class mfg:
             
             self.u = self.alpha*self.u + (1-self.alpha)*un
             
-            if self.verbose and i%100 == 0:
+            if self.verbose and i%500 == 0:
                 print('u error',l2norm)
             
             i +=1
@@ -217,12 +217,15 @@ class mfg:
             
             self.m =  self.alpha*self.m + (1-self.alpha)*mn
             
-            if self.verbose and i%100 == 0:
+            if self.verbose and i%500 == 0:
                 print('m error',l2norm)
                 
             i+=1
             
-    def simulation(self,save = False,verbose = False):
+    def simulation(self,alpha = 'auto',save = False,verbose = False):
+        
+        if alpha != 'auto':
+            self.alpha = alpha
         
         if self.mode == 'read':
             
@@ -272,7 +275,7 @@ class mfg:
                 np.savetxt(r'data/vx_'+ self.config +'.txt',self.vx)
                 np.savetxt(r'data/vy_'+ self.config +'.txt',self.vy)
     
-    def draw_density(self,d = 'auto', title = True, colorbar = True, axis = True, save = False,savedir = 'figs'):   
+    def draw_density(self,d = 'auto', title = True, colorbar = True, axis = True, scale = True, save = False,savedir = 'figs'):   
         
         # Enable LaTeX
         plt.rcParams['text.usetex'] = True
@@ -301,6 +304,11 @@ class mfg:
         
         plt.xticks([-d,0,d],[-d,0,d],size = 20)
         plt.yticks([-d,0,d],[-d,0,d],size = 20)
+        
+        if scale: 
+            scale = plt.arrow(d - 1.2, -d + 0.2, 1, 0,width = .1,head_width = 0,head_length = 0,color = 'lime',zorder= 10)
+            plt.text(d - 0.7, -d + 0.4, r'1m',size = 20, color = 'lime', ha = 'center', va = 'center')
+            plt.gca().add_artist(scale)
         
         if not axis:
             plt.axis('off')
