@@ -40,6 +40,9 @@ class mfg:
             self.l = .5*self.R
             self.dx  = self.min_dx
             
+        self.gamma_1 = self.xi*self.gam/self.c_s
+        self.gamma_2 = self.R*self.gam/self.s
+            
         self.dy    = self.dx
         self.nx    = int(2*self.lx/self.dx + 1)
         self.ny    = int(2*self.ly/self.dy + 1)
@@ -275,7 +278,7 @@ class mfg:
                 np.savetxt(r'data/vx_'+ self.config +'.txt',self.vx)
                 np.savetxt(r'data/vy_'+ self.config +'.txt',self.vy)
     
-    def draw_density(self,d = 'auto', title = True, colorbar = True, axis = True, scale = True, save = False,savedir = 'figs'):   
+    def draw_density(self,saturation = 'full', clim = 'auto',d = 'auto', title = True, colorbar = True, axis = True, scale = True, save = False,savedir = 'gfx'):   
         
         # Enable LaTeX
         plt.rcParams['text.usetex'] = True
@@ -283,7 +286,11 @@ class mfg:
         
         # Create colormap
         usual = mpl.cm.hot_r(np.arange(256))
-        saturate = np.ones((1,4))
+        
+        if saturation == 'full':
+            saturation = 256
+        
+        saturate = np.ones((int(256/saturation),4))
         
         for i in range(3):
             saturate[:,i] = np.linspace(usual[-1,i],0,saturate.shape[0])
@@ -319,16 +326,17 @@ class mfg:
         plt.gca().add_artist(c)
         plt.imshow(np.flip(self.m,axis = 0),extent=[-self.lx,self.lx,-self.ly,self.ly],cmap = cmap)
         
+        if clim != 'auto':
+            plt.clim(0,clim)
+        
         if colorbar:
             plt.colorbar()
+            
         if save:
-            plt.savefig(r''+ savedir+'/'+self.config+'.png')
-        
-        plt.show()
-        plt.close()
-        
-        
-    def draw_velocities(self, l = 'auto', d = 'auto', title = True, colorbar = True, axis = True, save = False,savedir = 'figs'):
+            plt.savefig(r''+ savedir+'/'+self.config+'.png',bbox_inches='tight', pad_inches=0)
+    
+    
+    def draw_velocities(self, l = 'auto', d = 'auto', title = True, colorbar = True, scale = True, axis = True, save = False,savedir = 'figs'):
         
         # Enable LaTeX
         plt.rcParams['text.usetex'] = True
@@ -372,6 +380,11 @@ class mfg:
         ay = self.vy[::l,::l]
         
         plt.quiver(x,y,ax,ay + self.s,angles='xy', scale_units='xy', scale=1, pivot = 'mid', alpha = mtr)
+        
+        if scale: 
+            scale = plt.arrow(d - 1.2, -d + 0.2, 1, 0, width = .08,head_width = 0.15,head_length = 0.15,color = 'red',zorder= 10)
+            plt.text(d - 0.7, -d + 0.4, r'1m',size = 20, color = 'red', ha = 'center', va = 'center')
+            plt.gca().add_artist(scale)
        
         if save:
             plt.savefig(r''+ savedir+'/'+self.config+'.png')
