@@ -32,16 +32,16 @@ class mfg:
         self.min_dx = 0.05
         
         if self.gam > 0:
-            self.lam = 0
             self.l   = 0.1/np.sqrt(self.gam)
             self.dx  = np.min([0.2*self.l,self.min_dx])
         else:
-            self.lam = - self.g*self.m_0
-            self.l = .5*self.R
+            self.lam = -self.g*self.m_0
             self.dx  = self.min_dx
             
         self.gamma_1 = self.xi*self.gam/self.c_s
         self.gamma_2 = self.R*self.gam/self.s
+        self.R_tilde = self.R/self.xi
+        self.s_tilde = self.s/self.c_s 
             
         self.dy    = self.dx
         self.nx    = int(2*self.lx/self.dx + 1)
@@ -64,7 +64,7 @@ class mfg:
             if self.gam > 0:
                 self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0/self.gam
             else:
-                self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0
+                self.u = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
             
             self.m = np.zeros((self.ny,self.nx)) + self.m_0
             
@@ -78,7 +78,7 @@ class mfg:
             if self.gam > 0:
                 self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0/self.gam
             else:
-                self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0
+                self.u = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
             
             self.m = np.zeros((self.ny,self.nx)) + self.m_0
             
@@ -108,21 +108,12 @@ class mfg:
         mask_outer_rim = (np.sqrt(X**2 + Y**2) > l + R)*(np.sqrt(X**2 + Y**2) < (1.3*l + R))
         mask_out = np.sqrt(X**2 + Y**2) > (l + R)
         mask_inner_rim = (np.sqrt(X**2 + Y**2) < (l + R))*(np.sqrt(X**2 + Y**2) > (0.7*l + R))
-
-        if self.gam > 0:
-    
-            self.u[0,:] = -self.g*self.m_0/self.gam
-            self.u[:,0] = -self.g*self.m_0/self.gam
-            self.u[-1,:] = -self.g*self.m_0/self.gam
-            self.u[:,-1] = -self.g*self.m_0/self.gam
         
-        else: 
-            
-            self.u[0,:] = -self.g*self.m_0
-            self.u[:,0] = -self.g*self.m_0
-            self.u[-1,:] = -self.g*self.m_0
-            self.u[:,-1] = -self.g*self.m_0
-      
+        self.u[0,:] = -self.g*self.m_0/self.gam
+        self.u[:,0] = -self.g*self.m_0/self.gam
+        self.u[-1,:] = -self.g*self.m_0/self.gam
+        self.u[:,-1] = -self.g*self.m_0/self.gam
+        
         l2norm = 1
         i = 1
         
@@ -133,7 +124,7 @@ class mfg:
             un_mask_in = self.u.copy()
             un_mask_in[mask_outer_rim] = np.exp(-un_mask_in[mask_outer_rim]/(self.mu*self.sigma**2))
 
-            A_phi = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1] - self.lam
+            A_phi = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1] 
             S_phi = 0.5*self.mu*self.sigma**4*(un_mask_in[2:,1:-1] + un_mask_in[:-2,1:-1] + un_mask_in[1:-1,2:] + un_mask_in[1:-1,:-2])/(self.dx*self.dy)  - self.mu*self.sigma**2*self.s*(un_mask_in[2:,1:-1] - un_mask_in[:-2,1:-1])/(2*self.dy)
      
             self.u[mask_in] = S_phi[mask_in[1:-1,1:-1]]/A_phi[mask_in[1:-1,1:-1]]
@@ -145,7 +136,7 @@ class mfg:
             un_y = un_mask_out[2:,1:-1] - un_mask_out[:-2,1:-1]
             un_x = un_mask_out[1:-1,2:] - un_mask_out[1:-1, :-2]
             
-            A_u = self.gam + 2*self.sigma**2/(self.dx*self.dy) + self.lam
+            A_u = self.gam + 2*self.sigma**2/(self.dx*self.dy) 
             S_u = 0.5*self.sigma**2*(un_xx)/(self.dx*self.dy) - (un_x**2 + un_y**2)/(8*self.dx**2*self.mu) - self.s*(un_y)/(2*self.dx) - self.g*self.m[1:-1,1:-1]
             
             self.u[1:-1,1:-1][mask_out[1:-1,1:-1]] = S_u[mask_out[1:-1,1:-1]]/A_u
@@ -199,7 +190,7 @@ class mfg:
             mn_mask_in = mn.copy()
             mn_mask_in[mask_outer_rim] = mn[mask_outer_rim]/np.exp(-self.u[mask_outer_rim]/(self.mu*self.sigma**2)) 
 
-            A_gamma = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1] - self.lam
+            A_gamma = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1] 
             S_gamma = 0.5*self.mu*self.sigma**4*(mn_mask_in[2:,1:-1] + mn_mask_in[:-2,1:-1] + mn_mask_in[1:-1,2:] + mn_mask_in[1:-1,:-2])/(self.dx*self.dy) + self.mu*self.sigma**2*self.s*(mn_mask_in[2:,1:-1] - mn_mask_in[:-2,1:-1])/(2*self.dy)
      
             self.m[mask_in] = S_gamma[mask_in[1:-1,1:-1]]/A_gamma[mask_in[1:-1,1:-1]]
@@ -225,6 +216,32 @@ class mfg:
                 
             i+=1
             
+    def jacobi(self):
+        self.u[:,0]=np.sqrt(self.m_0)
+        self.u[0,:] = np.sqrt(self.m_0)
+        self.u[-1,:] = np.sqrt(self.m_0)
+        self.u[:,-1] = np.sqrt(self.m_0)
+        
+        l2norm = 1
+        i = 1
+        
+        while l2norm > self.l2_target:
+            
+            un = self.u.copy()
+            A = -2*self.mu*self.sigma**4/(self.dx*self.dy) + self.lam + (self.g*self.m[1:-1,1:-1] + self.V[1:-1,1:-1])
+            Q = un[1:-1,2:] + un[1:-1, :-2] + un[2:, 1:-1] + un[:-2, 1:-1]
+            S = (-(0.5*self.mu*Q*self.sigma**4)/(self.dx*self.dy)+0.5*self.mu*(self.sigma**2)*self.s*(un[2:,1:-1] - un[:-2, 1:-1])/self.dy)
+            
+            self.u[1:-1,1:-1] = S/A
+            
+            l2norm = self.L2_error(self.u,un)
+            
+            if self.verbose and i%500 == 0:
+                print('p error',l2norm)
+            
+            i+=1
+            
+        
     def simulation(self,alpha = 'auto',save = False,verbose = False):
         
         if alpha != 'auto':
@@ -244,33 +261,55 @@ class mfg:
             
             print('Computation begins')
          
-            while l2norm > self.l2_target:
+            if self.gam > 0:
                 
-                m_old = self.m.copy()
+                while l2norm > self.l2_target:
+                    
+                    m_old = self.m.copy()
+                    
+                    self.jacobi_u()
+                    self.jacobi_m()
+                    
+                    self.m = self.alpha*self.m + (1-self.alpha)*m_old
                 
-                self.jacobi_u()
-                self.jacobi_m()
+                    l2norm = self.L2_error(self.m, m_old)
+                    
+                    toc = time.time()
+                    
+                    print(f'Error = {l2norm:.3e} Time = {(toc-tic)//3600:.0f}h{((toc-tic)//60)%60:.0f}m{(toc-tic)%60:.0f}s')
+                    
+                print('Computation ends')
                 
-                self.m = self.alpha*self.m + (1-self.alpha)*m_old
-            
-                l2norm = self.L2_error(self.m, m_old)
+                mask_in =  np.sqrt(self.X**2 + self.Y**2) < (self.l + self.R)
+                mask_out = np.sqrt(self.X**2 + self.Y**2) > (self.l + self.R)
+                                                                   
+                p = self.u.copy()
+                p[mask_out] = np.exp(-p[mask_out]/(self.mu*self.sigma**2))
+                q = self.m.copy()
+                q[mask_out] = q[mask_out]/p[mask_out]
+                m = self.m
+                self.m[mask_in] = m[mask_in]*self.u[mask_in]
                 
-                toc = time.time()
+            else:
                 
-                print(f'Error = {l2norm:.3e} Time = {(toc-tic)//3600:.0f}h{((toc-tic)//60)%60:.0f}m{(toc-tic)%60:.0f}s')
-                
-            print('Computation ends')
-            
-            mask_in =  np.sqrt(self.X**2 + self.Y**2) < (self.l + self.R)
-            mask_out = np.sqrt(self.X**2 + self.Y**2) > (self.l + self.R)
-                                                               
-            p = self.u.copy()
-            p[mask_out] = np.exp(-p[mask_out]/(self.mu*self.sigma**2))
-            q = self.m.copy()
-            q[mask_out] = q[mask_out]/p[mask_out]
-            m = self.m
-            self.m[mask_in] = m[mask_in]*self.u[mask_in]
-            
+                while l2norm > self.l2_target:
+                    
+                    mn = self.m.copy()
+                    
+                    self.jacobi()
+                    
+                    p = self.u.copy()
+                    q = np.flip(p,0)
+                    
+                    self.m = self.alpha*p*q + (1-self.alpha)*mn
+                    l2norm = self.L2_error(self.m,mn)
+                    
+                    toc = time.time()
+                    
+                    print(f'Error = {l2norm:.3e} Time = {(toc-tic)//3600:.0f}h{((toc-tic)//60)%60:.0f}m{(toc-tic)%60:.0f}s')
+                    
+                print('Computation ends')
+               
             self.get_velocities(p,q)    
             
             if save:
