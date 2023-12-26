@@ -133,7 +133,7 @@ class mfg:
             un_mask_in = self.u.copy()
             un_mask_in[mask_outer_rim] = np.exp(-un_mask_in[mask_outer_rim]/(self.mu*self.sigma**2))
 
-            A_phi = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1]
+            A_phi = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1] - self.lam
             S_phi = 0.5*self.mu*self.sigma**4*(un_mask_in[2:,1:-1] + un_mask_in[:-2,1:-1] + un_mask_in[1:-1,2:] + un_mask_in[1:-1,:-2])/(self.dx*self.dy)  - self.mu*self.sigma**2*self.s*(un_mask_in[2:,1:-1] - un_mask_in[:-2,1:-1])/(2*self.dy)
      
             self.u[mask_in] = S_phi[mask_in[1:-1,1:-1]]/A_phi[mask_in[1:-1,1:-1]]
@@ -199,7 +199,7 @@ class mfg:
             mn_mask_in = mn.copy()
             mn_mask_in[mask_outer_rim] = mn[mask_outer_rim]/np.exp(-self.u[mask_outer_rim]/(self.mu*self.sigma**2)) 
 
-            A_gamma = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1]
+            A_gamma = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1] - self.lam
             S_gamma = 0.5*self.mu*self.sigma**4*(mn_mask_in[2:,1:-1] + mn_mask_in[:-2,1:-1] + mn_mask_in[1:-1,2:] + mn_mask_in[1:-1,:-2])/(self.dx*self.dy) + self.mu*self.sigma**2*self.s*(mn_mask_in[2:,1:-1] - mn_mask_in[:-2,1:-1])/(2*self.dy)
      
             self.m[mask_in] = S_gamma[mask_in[1:-1,1:-1]]/A_gamma[mask_in[1:-1,1:-1]]
