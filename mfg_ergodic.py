@@ -390,7 +390,6 @@ class mfg:
             lx = int(round((self.nx - 2)/40))
             ly = int(round((self.ny - 2)/40))
             l = np.min([lx,ly])
-            print(l)
         
         plt.xlim((-d,d))
         plt.ylim((-d,d))
