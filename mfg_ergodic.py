@@ -32,7 +32,7 @@ class mfg:
         self.min_dx = 0.05
         
         if self.gam > 0:
-            self.l   = 0.1/np.sqrt(self.gam)
+            self.l   = self.sigma/(10*np.sqrt(2*self.gam))
             self.dx  = np.min([0.2*self.l,self.min_dx])
         else:
             self.lam = -self.g*self.m_0
