@@ -42,7 +42,7 @@ def L2_error(p, pn):
 C = np.zeros((Ny,Nx))
 # C[np.sqrt((X - x_0)**2 + (Y - y_0)**2) < R] = V
 
-C[(np.abs(X) < 8) & (np.abs(Y + 6) < 0.5 ) ] = V
+# C[(np.abs(X) < 8) & (np.abs(Y + 6) < 0.5 ) ] = V
 
 # Main algorithm 
 def jacobi(m,p,im):
@@ -74,7 +74,7 @@ def v(p):
     
     return vx,vy
 
-p_0 = np.zeros((Ny,Nx)) +1
+p_0 = np.zeros((Ny,Nx)) + 1
 m = np.full((Ny,Nx),1)
 p = jacobi(m,p_0,False)
 
@@ -84,11 +84,11 @@ C_mask = np.zeros((Ny,Nx)) + 1
 C_mask[C!= 0] = 0
 
 
-l = 2
-plt.quiver(X[1:-1,1:-1][::l,::l], Y[1:-1,1:-1][::l,::l], C_mask[1:-1,1:-1][::l,::l]*vx[::l,::l]/np.abs(vx[::l,::l]), C_mask[1:-1,1:-1][::l,::l]*vy[::l,::l]/np.abs(vy[::l,::l]))
-plt.show()
+# l = 2
+# plt.quiver(X[1:-1,1:-1][::l,::l], Y[1:-1,1:-1][::l,::l], C_mask[1:-1,1:-1][::l,::l]*vx[::l,::l]/np.abs(vx[::l,::l]), C_mask[1:-1,1:-1][::l,::l]*vy[::l,::l]/np.abs(vy[::l,::l]))
+# plt.show()
 
-plt.pcolor(X,Y,p**2)
+plt.pcolor(X,Y,p)
 plt.clim(0,m_0*1.5)
 plt.colorbar()
 plt.show()

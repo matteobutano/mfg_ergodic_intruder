@@ -3,12 +3,9 @@ import matplotlib.pyplot as plt
 
 
 lx = 2
-dx = 0.01
+dx = 0.1
 nx = int(lx/dx + 1)
 x = np.linspace(-lx, lx, nx)
-
-C = np.zeros(nx)
-C[np.abs(x)< 1] = 10000
 
 
 def L2_error(p, pn):
@@ -16,20 +13,28 @@ def L2_error(p, pn):
 
 def jacobi_1D(p):
     
-    p[0] = 1
-    p[-1] = 3
+    p[0] = 3
+    
+    p[-1] = 1
+    
     l2_error = 1
-    while l2_error > 10e-6:
-        
+    
+    # while l2_error > 10e-8:
+    for i in range(1000):   
         pn = p.copy()
-        p[1:-1] = 0.5*(pn[2:] + pn[:-2])/(1 + C[1:-1]*dx**2)
+        
+        p[1:-1] = 0.5*(pn[2:] + pn[:-2])
+        
+        p[1:-1] = p[1:-1] + ( 1- p[1] )
+        
+        print(p[1])
         
         l2_error = L2_error(p,pn)
         print(l2_error)
         
     return p
 
-p = np.zeros(nx) + 1
+p = np.zeros(nx) + 5
 p = jacobi_1D(p)
 
 plt.plot(x,p)
