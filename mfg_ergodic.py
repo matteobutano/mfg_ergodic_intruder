@@ -90,7 +90,7 @@ class mfg:
             
         V = var['mfg_params']['V']
         self.V = np.zeros((self.ny,self.nx))
-        # self.V[np.sqrt(self.X**2 + self.Y**2) < self.R] = V
+        self.V[np.sqrt(self.X**2 + self.Y**2) < self.R] = V
         self.V[:,0]  = V
         self.V[:,-1] = V
         
@@ -223,20 +223,10 @@ class mfg:
             i+=1
             
     def jacobi(self):
-        
-        # self.u[:,0]=np.sqrt(self.m_0)
-        # self.u[0,:] = np.sqrt(self.m_0)
-        # self.u[-1,:] = np.sqrt(self.m_0)
-        # self.u[:,-1] = np.sqrt(self.m_0)
-        
+       
         l2norm = 1
-        i = 1
-        
+    
         while l2norm > self.l2_target:
-            self.u[:,0]  = self.u[:,2]
-            self.u[0,:]  = self.u[2,:]/3
-            self.u[-1,:] = self.u[-1,-3]*3
-            self.u[:,-1] =  self.u[:,-3]
             
             un = self.u.copy()
             A = -2*self.mu*self.sigma**4/(self.dx*self.dy) + self.lam + (self.g*self.m[1:-1,1:-1] + self.V[1:-1,1:-1])
@@ -246,12 +236,7 @@ class mfg:
             self.u[1:-1,1:-1] = S/A
             
             l2norm = self.L2_error(self.u,un)
-            
-            if self.verbose and i%1 == 0:
-                print('p error',l2norm)
-            
-            i+=1
-            
+        
         
     def simulation(self,alpha = 'auto',save = False,verbose = False):
         
