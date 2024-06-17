@@ -1,6 +1,6 @@
 __pychache__/
-/data
-/figs
-/gfx
-/configs
-/outputs
+data/
+figs/
+gfx/
+configs/
+outputs/
