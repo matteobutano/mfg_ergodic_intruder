@@ -84,6 +84,10 @@ class mfg:
         for cyl in var['room']['cylinders']:
             cyl = var['room']['cylinders'][cyl]
             self.V[np.sqrt((self.X - cyl[0])**2 + (self.Y - cyl[1])**2) < cyl[2]] = V
+            
+        for wall in var['room']['walls']:
+            wall = var['room']['walls'][wall]
+            self.V[(np.abs(self.X - wall[0]) < wall[2]/2) & (np.abs(self.Y - wall[1]) < wall[3]/2)] = V
         
         
         self.gam = var['mfg_params']['gam']
