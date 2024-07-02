@@ -20,17 +20,17 @@ class mfg:
         # Main Parameters
         self.xi    = var['mfg_params']['xi']
         self.c_s   = var['mfg_params']['c_s']
-        self.R     = var['room']['R']
-        self.s     = var['room']['s']
-        self.m_0   = var['room']['m_0']
+        self.R     = var['mfg_params']['R']
+        self.s     = var['mfg_params']['s']
+        self.m_0   = var['mfg_params']['m_0']
         self.mu    = var['mfg_params']['mu']
         self.gam   = var['mfg_params']['gam']
         self.g     = -(2*self.c_s**2)/self.m_0
         self.sigma = np.sqrt(2*self.xi*self.c_s)
         
         # Create space
-        self.lx    = var['room']['lx']
-        self.ly    = var['room']['ly']
+        self.lx    = var['mfg_params']['lx']
+        self.ly    = var['mfg_params']['ly']
         
         self.min_dx = 0.05
         
@@ -60,39 +60,35 @@ class mfg:
             self.vx = np.genfromtxt(r'data/vx_'+self.config+'.txt')
             self.vy = np.genfromtxt(r'data/vy_'+self.config+'.txt')
             
-        elif os.path.exists(r'data/m_'+self.config+'.txt') and mode == 'write':
-            
-            print('Found existing data, ready to write.')
-            
+        else:
+            print('Ready to write.')         
             if self.gam > 0:
                 self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0/self.gam
             else:
-                self.u = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
+                self.p = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
+                self.q = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
             
             self.m = np.zeros((self.ny,self.nx)) + self.m_0
-            
             self.vx = np.zeros((self.ny-2,self.nx-2))
             self.vy = np.zeros((self.ny-2,self.nx-2))
         
-        else: 
-            
-            print('No data found, initialising.')
-            
-            if self.gam > 0:
-                self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0/self.gam
-            else:
-                self.u = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
-            
-            self.m = np.zeros((self.ny,self.nx)) + self.m_0
-            
-            self.vx = np.zeros((self.ny-2,self.nx-2))
-            self.vy = np.zeros((self.ny-2,self.nx-2))
+
             
         V = var['mfg_params']['V']
         self.V = np.zeros((self.ny,self.nx))
-        self.V[np.sqrt(self.X**2 + self.Y**2) < self.R] = V
-        self.V[:,0]  = V
-        self.V[:,-1] = V
+        self.V[(np.abs(self.X) < var['room']['room_length']) & (np.abs(self.Y) < var['room']['room_height'])] = V
+        self.V[(np.abs(self.X) < var['room']['room_length'] - .5) & (np.abs(self.Y) < var['room']['room_height'] - .5)] = 0
+        self.V[(np.abs(self.X - var['room']['door_up'][0]) < var['room']['door_up'][1]/2) & (self.Y > 0)] = 0
+        self.V[(np.abs(self.X - var['room']['door_down'][0]) < var['room']['door_down'][1]/2) & (self.Y < 0)] = 0
+        
+        for cyl in var['room']['cylinders']:
+            cyl = var['room']['cylinders'][cyl]
+            self.V[np.sqrt((self.X - cyl[0])**2 + (self.Y - cyl[1])**2) < cyl[2]] = V
+            
+        for wall in var['room']['walls']:
+            wall = var['room']['walls'][wall]
+            self.V[(np.abs(self.X - wall[0]) < wall[2]/2) & (np.abs(self.Y - wall[1]) < wall[3]/2)] = V
+        
         
         self.gam = var['mfg_params']['gam']
         
@@ -222,91 +218,75 @@ class mfg:
                 
             i+=1
             
-    def jacobi(self):
+    def jacobi(self,mode):
        
         l2norm = 1
+            
+        if mode == "p":
+            s = self.s
+            f = self.p.copy()
+        else:
+            s = -self.s
+            f = self.q.copy()
     
         while l2norm > self.l2_target:
             
-            un = self.u.copy()
+            fn = f.copy()
             A = -2*self.mu*self.sigma**4/(self.dx*self.dy) + self.lam + (self.g*self.m[1:-1,1:-1] + self.V[1:-1,1:-1])
-            Q = un[1:-1,2:] + un[1:-1, :-2] + un[2:, 1:-1] + un[:-2, 1:-1]
-            S = (-(0.5*self.mu*Q*self.sigma**4)/(self.dx*self.dy)+0.5*self.mu*(self.sigma**2)*self.s*(un[2:,1:-1] - un[:-2, 1:-1])/self.dy)
+            Q = fn[1:-1,2:] + fn[1:-1, :-2] + fn[2:, 1:-1] + fn[:-2, 1:-1]
+            S = (-(0.5*self.mu*Q*self.sigma**4)/(self.dx*self.dy)+0.5*self.mu*(self.sigma**2)*s*(fn[2:,1:-1] - fn[:-2, 1:-1])/self.dy)
             
-            self.u[1:-1,1:-1] = S/A
+            f[1:-1,1:-1] = S/A
             
-            l2norm = self.L2_error(self.u,un)
-        
+            l2norm = self.L2_error(f,fn)
+    
+        return f
         
     def simulation(self,alpha = 'auto',save = False,verbose = False):
-        
         if alpha != 'auto':
             self.alpha = alpha
         
         if self.mode == 'read':
-            
             print('Cannot modify data in this mode. Try using write.')
-            
         else: 
-        
             if verbose:
                 self.verbose = True
-            
+    
             tic  = time.time()
             l2norm = 1
-            
             print('Computation begins')
-         
             if self.gam > 0:
-                
                 while l2norm > self.l2_target:
-                    
                     m_old = self.m.copy()
-                    
                     self.jacobi_u()
                     self.jacobi_m()
-                    
                     self.m = self.alpha*self.m + (1-self.alpha)*m_old
-                
                     l2norm = self.L2_error(self.m, m_old)
-                    
                     toc = time.time()
-                    
                     print(f'Error = {l2norm:.3e} Time = {(toc-tic)//3600:.0f}h{((toc-tic)//60)%60:.0f}m{(toc-tic)%60:.0f}s')
                     
                 print('Computation ends')
-                
                 mask_in =  np.sqrt(self.X**2 + self.Y**2) < (self.l + self.R)
                 mask_out = np.sqrt(self.X**2 + self.Y**2) > (self.l + self.R)
-                                                                   
                 p = self.u.copy()
                 p[mask_out] = np.exp(-p[mask_out]/(self.mu*self.sigma**2))
                 q = self.m.copy()
                 q[mask_out] = q[mask_out]/p[mask_out]
                 m = self.m
                 self.m[mask_in] = m[mask_in]*self.u[mask_in]
-                
             else:
-                
-                while l2norm > self.l2_target:
-                    
+                while l2norm > self.l2_target:   
                     mn = self.m.copy()
                     
-                    self.jacobi()
-                    
-                    p = self.u.copy()
-                    q = np.flip(p,0)
-                    
-                    self.m = self.alpha*p*q + (1-self.alpha)*mn
+                    self.p = self.jacobi('p')
+                    self.q = self.jacobi('q')
+                    self.m = self.alpha*self.p*self.q + (1-self.alpha)*mn
                     l2norm = self.L2_error(self.m,mn)
-                    
                     toc = time.time()
-                    
                     print(f'Error = {l2norm:.3e} Time = {(toc-tic)//3600:.0f}h{((toc-tic)//60)%60:.0f}m{(toc-tic)%60:.0f}s')
-                    
                 print('Computation ends')
                
-            self.get_velocities(p,q)    
+            self.get_velocities(self.p,self.q)    
             
             if save:
                 np.savetxt(r'data/m_'+ self.config +'.txt',self.m)
@@ -355,10 +335,6 @@ class mfg:
         if not axis:
             plt.axis('off')
             
-        a = plt.arrow(0,-0.2*(self.R/.37),0,0.25*(self.R/.37),width = .1*(self.R/.37),head_width = .3*(self.R/.37),head_length = .2*(self.R/.37),color = 'black',zorder= 10)
-        c = plt.Circle((0, 0),radius = self.R)
-        plt.gca().add_artist(a)
-        plt.gca().add_artist(c)
         plt.imshow(np.flip(self.m,axis = 0),extent=[-self.lx,self.lx,-self.ly,self.ly],cmap = cmap)
         
         if clim != 'auto':
@@ -397,11 +373,6 @@ class mfg:
         
         if not axis:
             plt.axis('off')
-            
-        a = plt.arrow(0,-0.2*(self.R/.37),0,0.25*(self.R/.37),width = .1*(self.R/.37),head_width = .3*(self.R/.37),head_length = .2*(self.R/.37),color = 'black',zorder= 10)
-        c = plt.Circle((0, 0),radius = self.R)
-        plt.gca().add_artist(a)
-        plt.gca().add_artist(c)
         
         x = self.X[1:-1,1:-1][::l,::l]
         y = self.Y[1:-1,1:-1][::l,::l]
@@ -412,7 +383,7 @@ class mfg:
         ax = self.vx[::l,::l]
         ay = self.vy[::l,::l]
         
-        plt.quiver(x,y,ax,ay + self.s,angles='xy', scale_units='xy', scale=1, pivot = 'mid', alpha = mtr)
+        plt.quiver(x,y,ax,ay,angles='xy', scale_units='xy', scale=1, pivot = 'mid', alpha = mtr)
         
         if scale: 
             scale = plt.arrow(d - 1.2, -d + 0.2, 1, 0, width = .08,head_width = 0.15,head_length = 0.15,color = 'red',zorder= 10)
