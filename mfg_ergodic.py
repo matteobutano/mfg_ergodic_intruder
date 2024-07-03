@@ -27,6 +27,7 @@ class mfg:
         self.gam   = var['mfg_params']['gam']
         self.g     = -(2*self.c_s**2)/self.m_0
         self.sigma = np.sqrt(2*self.xi*self.c_s)
+        self.k     = var['mfg_params']['k']
         
         # Create space
         self.lx    = var['mfg_params']['lx']
@@ -45,13 +46,11 @@ class mfg:
         self.gamma_2 = 0
         self.R_tilde = self.R/self.xi
         self.s_tilde = self.s/self.c_s 
-            
         self.dy    = self.dx
         self.nx    = int(2*self.lx/self.dx + 1)
         self.ny    = int(2*self.ly/self.dy + 1)
         self.x     = np.linspace(-self.lx,self.lx,self.nx)
         self.y     = np.linspace(-self.ly,self.ly,self.ny)
-        
         self.X,self.Y = np.meshgrid(self.x,self.y)
         
         if os.path.exists(r'data/m_'+self.config+'.txt') and mode == 'read':
@@ -59,7 +58,6 @@ class mfg:
             self.m = np.genfromtxt(r'data/m_'+self.config+'.txt')
             self.vx = np.genfromtxt(r'data/vx_'+self.config+'.txt')
             self.vy = np.genfromtxt(r'data/vy_'+self.config+'.txt')
-            
         else:
             print('Ready to write.')         
             if self.gam > 0:
@@ -67,13 +65,10 @@ class mfg:
             else:
                 self.p = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
                 self.q = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
-            
             self.m = np.zeros((self.ny,self.nx)) + self.m_0
             self.vx = np.zeros((self.ny-2,self.nx-2))
             self.vy = np.zeros((self.ny-2,self.nx-2))
-        
 
-            
         V = var['mfg_params']['V']
         self.V = np.zeros((self.ny,self.nx))
         self.V[(np.abs(self.X) < var['room']['room_length']) & (np.abs(self.Y) < var['room']['room_height'])] = V
@@ -232,9 +227,9 @@ class mfg:
         while l2norm > self.l2_target:
             
             fn = f.copy()
-            A = -2*self.mu*self.sigma**4/(self.dx*self.dy) + self.lam + (self.g*self.m[1:-1,1:-1] + self.V[1:-1,1:-1])
+            A = -2*self.mu*(1 + self.k*self.m[1:-1,1:-1])*self.sigma**4/(self.dx*self.dy) + self.lam + (self.g*self.m[1:-1,1:-1] + self.V[1:-1,1:-1])
             Q = fn[1:-1,2:] + fn[1:-1, :-2] + fn[2:, 1:-1] + fn[:-2, 1:-1]
-            S = (-(0.5*self.mu*Q*self.sigma**4)/(self.dx*self.dy)+0.5*self.mu*(self.sigma**2)*s*(fn[2:,1:-1] - fn[:-2, 1:-1])/self.dy)
+            S = (-(0.5*self.mu*(1 + self.k*self.m[1:-1,1:-1])*Q*self.sigma**4)/(self.dx*self.dy)+0.5*self.mu*(1 + self.k*self.m[1:-1,1:-1])*(self.sigma**2)*s*(fn[2:,1:-1] - fn[:-2, 1:-1])/self.dy)
             
             f[1:-1,1:-1] = S/A
             
