@@ -97,7 +97,7 @@ class mfg:
         self.gam = var['mfg_params']['gam']
         
         self.l2_target = 10e-8
-        self.alpha = 0.1
+        self.alpha = 0.01
         self.verbose = False
          
     def L2_error(self, p, pn):
