@@ -5,67 +5,74 @@ import json
 import time
 import os
 
-# You can modify this file
-
 class mfg:
     def __init__(self, config, mode = 'read'):
+        """
+        Create the simulation, initialize the array u and m. 
+
+        Parameters
+        ----------
+        config : str
+            Name of the config file WITHOUT .json.
+        mode : str, optional
+            Choose if you want to read existing data or to create new. The default is 'read', the other option is "write".
+
+        Returns
+        -------
+        None.
+
+        """
         self.config = config
-        self.mode = mode
+        self.mode = mode # read or write
         with open(r'configs/'+ config +'.json') as f:
             var = json.loads(f.read())
-        # Main Parameters
-        self.xi    = var['mfg_params']['xi']
-        self.c_s   = var['mfg_params']['c_s']
-        self.R     = var['room']['R']
-        self.s     = var['room']['s']
-        self.m_0   = var['room']['m_0']
-        self.mu    = var['mfg_params']['mu']
-        self.gam   = var['mfg_params']['gam']
-        self.g     = -(2*self.c_s**2)/self.m_0
-        self.sigma = np.sqrt(2*self.xi*self.c_s)
+        # Parameters of the MFG 
+        self.xi      = var['mfg_params']['xi']
+        self.c_s    = var['mfg_params']['c_s']
+        self.R      = var['room']['R']
+        self.s      = var['room']['s']
+        self.m_0    = var['room']['m_0']
+        self.mu     = var['mfg_params']['mu']
+        self.gam    = var['mfg_params']['gam']
+        self.g      = -(2*self.c_s**2)/self.m_0
+        self.sigma  = np.sqrt(2*self.xi*self.c_s)
         # Create space
-        self.lx    = var['room']['lx']
-        self.ly    = var['room']['ly']
-        self.min_dx = 0.05
+        self.lx     = var['room']['lx'] # horizontal half length
+        self.ly     = var['room']['ly'] # vertical half length
+        self.min_dx = 0.05 # minimal grid step 
         if self.gam > 0:
-            self.l   = self.sigma/(10*np.sqrt(2*self.gam))
-            self.dx  = np.min([0.2*self.l,self.min_dx])
+            self.l    = self.sigma/(10*np.sqrt(2*self.gam))
+            self.dx   = np.min([0.2*self.l,self.min_dx])
         else:
-            self.lam = -self.g*self.m_0
-            self.dx  = self.min_dx
-        self.gamma_1 = self.xi*self.gam/self.c_s
-        self.gamma_2 = 0
-        self.R_tilde = self.R/self.xi
-        self.s_tilde = self.s/self.c_s 
-        self.dy    = self.dx
-        self.nx    = int(2*self.lx/self.dx + 1)
-        self.ny    = int(2*self.ly/self.dy + 1)
-        self.x     = np.linspace(-self.lx,self.lx,self.nx)
-        self.y     = np.linspace(-self.ly,self.ly,self.ny)
+            self.lam  = -self.g*self.m_0
+            self.dx   = self.min_dx
+        self.dy       = self.dx
+        self.nx       = int(2*self.lx/self.dx + 1)
+        self.ny       = int(2*self.ly/self.dy + 1)
+        self.x        = np.linspace(-self.lx,self.lx,self.nx)
+        self.y        = np.linspace(-self.ly,self.ly,self.ny)
         self.X,self.Y = np.meshgrid(self.x,self.y)
-        if os.path.exists(r'data/m_'+self.config+'.txt') and mode == 'read':
-            print('Found and read existing data.')
-            self.m = np.genfromtxt(r'data/m_'+self.config+'.txt')
-            self.vx = np.genfromtxt(r'data/vx_'+self.config+'.txt')
-            self.vy = np.genfromtxt(r'data/vy_'+self.config+'.txt')
-        elif os.path.exists(r'data/m_'+self.config+'.txt') and mode == 'write':
-            print('Found existing data, ready to write.')
-            if self.gam > 0:
-                self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0/self.gam
-            else:
-                self.u = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
-            self.m = np.zeros((self.ny,self.nx)) + self.m_0
-            self.vx = np.zeros((self.ny-2,self.nx-2))
-            self.vy = np.zeros((self.ny-2,self.nx-2))
-        else: 
-            print('No data found, initialising.')
-            if self.gam > 0:
-                self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0/self.gam
-            else:
-                self.u = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
-            self.m = np.zeros((self.ny,self.nx)) + self.m_0
-            self.vx = np.zeros((self.ny-2,self.nx-2))
-            self.vy = np.zeros((self.ny-2,self.nx-2))
+        
+        if mode == 'read':
+            if os.path.exists(r'data/m_'+self.config+'.txt'):
+                print('Found and read existing data.')
+                self.m = np.genfromtxt(r'data/m_'+self.config+'.txt')
+                self.vx = np.genfromtxt(r'data/vx_'+self.config+'.txt')
+                self.vy = np.genfromtxt(r'data/vy_'+self.config+'.txt')
+            else: 
+                raise Exception('The data you are looking for does not exist.')
+        else:  
+            if os.path.exists(r'data/m_'+self.config+'.txt'): 
+                raise Exception('This data already exist and cannot be overwritten')
+            else: 
+                print('No data found, initialising.')
+                if self.gam > 0:
+                    self.u = np.zeros((self.ny,self.nx)) - self.g*self.m_0/self.gam
+                else:
+                    self.u = np.zeros((self.ny,self.nx)) + np.sqrt(self.m_0)
+                self.m = np.zeros((self.ny,self.nx)) + self.m_0
+                self.vx = np.zeros((self.ny-2,self.nx-2))
+                self.vy = np.zeros((self.ny-2,self.nx-2))
         V = var['mfg_params']['V']
         self.V = np.zeros((self.ny,self.nx))
         self.V[np.sqrt(self.X**2 + self.Y**2) < self.R] = V
@@ -80,14 +87,11 @@ class mfg:
         return np.sqrt(np.sum((p - pn)**2)/np.sum(pn**2))  
     
     def jacobi_u(self):
-        X = self.X
-        Y = self.Y
-        R = self.R
-        l = self.l 
-        mask_in =  np.sqrt(X**2 + Y**2) < (l + R)
-        mask_outer_rim = (np.sqrt(X**2 + Y**2) > l + R)*(np.sqrt(X**2 + Y**2) < (1.3*l + R))
-        mask_out = np.sqrt(X**2 + Y**2) > (l + R)
-        mask_inner_rim = (np.sqrt(X**2 + Y**2) < (l + R))*(np.sqrt(X**2 + Y**2) > (0.7*l + R))
+        # Create the masks to divide the space for double solution
+        mask_in =  np.sqrt(self.X**2 + self.Y**2) < (self.l + self.R)
+        mask_outer_rim = (np.sqrt(self.X**2 + self.Y**2) > self.l + self.R)*(np.sqrt(self.X**2 + self.Y**2) < (1.3*self.l + self.R))
+        mask_out = np.sqrt(self.X**2 + self.Y**2) > (self.l + self.R)
+        mask_inner_rim = (np.sqrt(self.X**2 + self.Y**2) < (self.l + self.R))*(np.sqrt(self.X**2 + self.Y**2) > (0.7*self.l + self.R))
         self.u[0,:] = -self.g*self.m_0/self.gam
         self.u[:,0] = -self.g*self.m_0/self.gam
         self.u[-1,:] = -self.g*self.m_0/self.gam
@@ -95,19 +99,19 @@ class mfg:
         l2norm = 1
         i = 1
         while l2norm > self.l2_target:
-            un = self.u.copy()
-            un_mask_in = self.u.copy()
-            un_mask_in[mask_outer_rim] = np.exp(-un_mask_in[mask_outer_rim]/(self.mu*self.sigma**2))
-            A_phi = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1] 
-            S_phi = 0.5*self.mu*self.sigma**4*(un_mask_in[2:,1:-1] + un_mask_in[:-2,1:-1] + un_mask_in[1:-1,2:] + un_mask_in[1:-1,:-2])/(self.dx*self.dy)  - self.mu*self.sigma**2*self.s*(un_mask_in[2:,1:-1] - un_mask_in[:-2,1:-1])/(2*self.dy)
-            self.u[mask_in] = S_phi[mask_in[1:-1,1:-1]]/A_phi[mask_in[1:-1,1:-1]]
+            un = self.u.copy() # Copy state of u
+            un_mask_in = self.u.copy() 
+            un_mask_in[mask_outer_rim] = np.exp(-un_mask_in[mask_outer_rim]/(self.mu*self.sigma**2)) # Convert from u to phi near cylinder 
+            A_phi = 2*self.mu*self.sigma**4/(self.dx*self.dy) - self.V[1:-1,1:-1]  # Denominator of Jacobi fraction for Cole-Hopf equations
+            S_phi = 0.5*self.mu*self.sigma**4*(un_mask_in[2:,1:-1] + un_mask_in[:-2,1:-1] + un_mask_in[1:-1,2:] + un_mask_in[1:-1,:-2])/(self.dx*self.dy)  - self.mu*self.sigma**2*self.s*(un_mask_in[2:,1:-1] - un_mask_in[:-2,1:-1])/(2*self.dy) # Numerator of Jacobi fraction for Cole-Hopf equations
+            self.u[mask_in] = S_phi[mask_in[1:-1,1:-1]]/A_phi[mask_in[1:-1,1:-1]] # Modify inner part with values of phi 
             un_mask_out = self.u.copy()        
-            un_mask_out[mask_inner_rim] = -self.mu*self.sigma**2*np.log(un_mask_out[mask_inner_rim])
+            un_mask_out[mask_inner_rim] = -self.mu*self.sigma**2*np.log(un_mask_out[mask_inner_rim]) # Convert from phi to u near cylinder
             un_xx = un_mask_out[2:,1:-1]+ un_mask_out[:-2,1:-1] + un_mask_out[1:-1, 2:]+ un_mask_out[1:-1,:-2]
             un_y = un_mask_out[2:,1:-1] - un_mask_out[:-2,1:-1]
             un_x = un_mask_out[1:-1,2:] - un_mask_out[1:-1, :-2]
-            A_u = self.gam + 2*self.sigma**2/(self.dx*self.dy) 
-            S_u = 0.5*self.sigma**2*(un_xx)/(self.dx*self.dy) - (un_x**2 + un_y**2)/(8*self.dx**2*self.mu) - self.s*(un_y)/(2*self.dx) - self.g*self.m[1:-1,1:-1]
+            A_u = self.gam + 2*self.sigma**2/(self.dx*self.dy) # Denominator of Jacobi fraction for HJB equation
+            S_u = 0.5*self.sigma**2*(un_xx)/(self.dx*self.dy) - (un_x**2 + un_y**2)/(8*self.dx**2*self.mu) - self.s*(un_y)/(2*self.dx) - self.g*self.m[1:-1,1:-1] # Numerator of Jacobi fraction for HJB equation
             self.u[1:-1,1:-1][mask_out[1:-1,1:-1]] = S_u[mask_out[1:-1,1:-1]]/A_u
             l2norm = self.L2_error(self.u,un)
             self.u = self.alpha*self.u + (1-self.alpha)*un
@@ -120,14 +124,10 @@ class mfg:
         self.m[:,0] = self.m_0
         self.m[-1,:] = self.m_0
         self.m[:,-1] = self.m_0
-        X = self.X
-        Y = self.Y
-        R = self.R
-        l = self.l 
-        mask_in =  np.sqrt(X**2 + Y**2) < (l + R)
-        mask_outer_rim = (np.sqrt(X**2 + Y**2) > l + R)*(np.sqrt(X**2 + Y**2) < (1.3*l + R))
-        mask_out = np.sqrt(X**2 + Y**2) > (l + R)
-        mask_inner_rim = (np.sqrt(X**2 + Y**2) < (l + R))*(np.sqrt(X**2 + Y**2) > (0.7*l + R))
+        mask_in =  np.sqrt(self.X**2 + self.Y**2) < (self.l + self.R)
+        mask_outer_rim = (np.sqrt(self.X**2 + self.Y**2) > self.l + self.R)*(np.sqrt(self.X**2 + self.Y**2) < (1.3*self.l + self.R))
+        mask_out = np.sqrt(self.X**2 + self.Y**2) > (self.l + self.R)
+        mask_inner_rim = (np.sqrt(self.X**2 + self.Y**2) < (self.l + self.R))*(np.sqrt(self.X**2 + self.Y**2) > (0.7*self.l + self.R))
         un = self.u.copy()
         un[mask_inner_rim] = -self.mu*self.sigma**2*np.log(un[mask_inner_rim])
         un_xx = (un[2:,1:-1]+ un[:-2,1:-1] + un[1:-1, 2:]+ un[1:-1,:-2] - 4*un[1:-1,1:-1])/(self.dx*self.dy)
@@ -234,6 +234,35 @@ class mfg:
                 np.savetxt(r'data/vy_'+ self.config +'.txt',self.vy)
     
     def draw_density(self,saturation = 'full', clim = 'auto',d = 'auto', title = True, colorbar = True, axis = True, scale = True, save = False,savedir = 'gfx'):   
+        """
+        Draw the density solution of the KFP equation
+
+        Parameters
+        ----------
+        saturation : int, optional
+            Changing this value changes the black-point of the colormap. The default is 'full'.
+        clim : float, optional
+            Max value of the colormap. The default is 'auto'.
+        d : float, optional
+            Size of the plot. The default is 'auto'.
+        title : str, optional
+            Title of the plot. The default is True.
+        colorbar : bool, optional
+            Choose if colorbar should appear. The default is True.
+        axis : bool, optional
+            Choose if axis should appear. The default is True.
+        scale : bool, optional
+            Choose if the scale on the bottom right should be shown. The default is True.
+        save : bool, optional
+            Choose if to save. The default is False.
+        savedir : str, optional
+            Choose where to save. The default is 'gfx'.
+
+        Returns
+        -------
+        None.
+
+        """
         # Enable LaTeX
         plt.rcParams['text.usetex'] = True
         plt.rcParams['font.family'] = 'serif'
@@ -274,7 +303,33 @@ class mfg:
             plt.savefig(r''+ savedir+'/'+self.config+'.png',bbox_inches='tight', pad_inches=0)
     
     def draw_velocities(self, l = 'auto', d = 'auto', title = True, colorbar = True, scale = True, axis = True, save = False,savedir = 'gfx'):
-        # Enable LaTeX
+        """
+        Draw the density solution of the KFP equation
+
+        Parameters
+        ----------
+        l : TYPE, optional
+            DESCRIPTION. The default is 'auto'.
+        d : float, optional
+            Size of the plot. The default is 'auto'.
+        title : str, optional
+            Title of the plot. The default is True.
+        colorbar : bool, optional
+            Choose if colorbar should appear. The default is True.
+        axis : bool, optional
+            Choose if axis should appear. The default is True.
+        scale : bool, optional
+            Choose if the scale on the bottom right should be shown. The default is True.
+        save : bool, optional
+            Choose if to save. The default is False.
+        savedir : str, optional
+            Choose where to save. The default is 'gfx'.
+
+        Returns
+        -------
+        None.
+
+        """
         plt.rcParams['text.usetex'] = True
         plt.rcParams['font.family'] = 'serif'
         plt.figure(figsize=(10,10))
