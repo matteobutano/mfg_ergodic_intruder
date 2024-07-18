@@ -273,7 +273,7 @@ class mfg:
         if save:
             plt.savefig(r''+ savedir+'/'+self.config+'.png',bbox_inches='tight', pad_inches=0)
     
-    def draw_velocities(self, l = 'auto', d = 'auto', title = True, colorbar = True, scale = True, axis = True, save = False,savedir = 'figs'):
+    def draw_velocities(self, l = 'auto', d = 'auto', title = True, colorbar = True, scale = True, axis = True, save = False,savedir = 'gfx'):
         # Enable LaTeX
         plt.rcParams['text.usetex'] = True
         plt.rcParams['font.family'] = 'serif'
