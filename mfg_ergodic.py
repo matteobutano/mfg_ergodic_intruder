@@ -190,8 +190,6 @@ class mfg:
         
         if alpha != 'auto':
             self.alpha = alpha
-        if self.mode == 'read':
-            print('Cannot modify data in this mode. Try using write.')
         else: 
             if verbose:
                 self.verbose = True
@@ -206,7 +204,7 @@ class mfg:
                     self.m = self.alpha*self.m + (1-self.alpha)*m_old
                     l2norm = self.L2_error(self.m, m_old)
                     toc = time.time()
-                    print(f'Error = {l2norm:.3e} Time = {(toc-tic)//3600:.0f}h{((toc-tic)//60)%60:.0f}m{(toc-tic)%60:.0f}s')
+                    print(f'Error = {l2norm:.3e}/{self.l2_target} Time = {(toc-tic)//3600:.0f}h{((toc-tic)//60)%60:.0f}m{(toc-tic)%60:.0f}s')
                 print('Computation ends')
                 mask_in =  np.sqrt(self.X**2 + self.Y**2) < (self.l + self.R)
                 mask_out = np.sqrt(self.X**2 + self.Y**2) > (self.l + self.R)                
